@@ -1,3 +1,24 @@
+### Running the phone number extractor
+
+* Find a recent common crawl here (http://blog.commoncrawl.org/) download a WET file manifest 'wet.paths.gz'.
+* Unzip the manifest and place it in the input folder.
+* Split the manifest into many jobs `split -l 3648 ./input/wet.paths ./input/actual/`
+* Edit ./run_phone_number_extract_jobs.sh and fill in your desired s3 output bucket.
+* Edit mrjob.config (add at least aws_access_key_id & aws_secret_access_key,
+you will also want to review the instance config, spot price, number, type, etc...).
+* Run ./run_phone_number_extract_jobs.sh -> this will print an s3 output prefix/localtion
+### Once all jobs complete
+* Copy the output from s3 `aws s3 sync [the s3 output prefix from above] ./actual_output`
+* To import the found numbers into your MySQL DB you'll need to set the following environment variables:
+    * db_host
+    * db_user
+    * db_password
+    * db_name
+* Then run `python import_into_db.py` (you will need to have installed python's MySQLdb package).
+
+If the process gets stuck or a job fails, that is OK. You can just delete the split files that
+suceeded from `./input/wet.paths` and then rerun the process.
+
 ![Common Crawl Logo](http://commoncrawl.org/wp-content/uploads/2012/04/ccLogo.png)
 
 # mrjob starter kit
@@ -58,7 +79,7 @@ Developing and testing your code doesn't actually need a Hadoop installation.
 First, you'll need to get the relevant demo data locally, which can be done by running:
 
     ./get-data.sh
-    
+
 If you're on Windows, you just need to download the files listed and place them in the appropriate folders.
 
 Once you have the data, to run the tasks locally, you can simply run:
